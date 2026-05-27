@@ -3446,12 +3446,7 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
       }
     };
 
-    menubarItemVolumeMetronome.onChange = event ->
-    {
-      var volume:Float = event.value.toFloat() / 100.0;
-      metronomeVolume = volume;
-      menubarLabelVolumeMetronome.text = 'Metronome - ${Std.int(event.value)}%';
-    };
+    menubarItemVolumeMetronome.onChange = event -> applyMetronomeVolume(Std.int(event.value));
     menubarItemVolumeMetronome.value = Std.int(metronomeVolume * 100);
     previousAudioVolumes[0] = Std.int(metronomeVolume * 100);
 
@@ -3466,46 +3461,21 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
     };
     menubarItemThemeMusic.selected = shouldPlayWelcomeMusic;
 
-    menubarItemVolumeHitsoundPlayer.onChange = event ->
-    {
-      var volume:Float = event.value.toFloat() / 100.0;
-      hitsoundVolumePlayer = volume;
-      menubarLabelVolumeHitsoundPlayer.text = 'Player - ${Std.int(event.value)}%';
-    };
+    menubarItemVolumeHitsoundPlayer.onChange = event -> applyHitsoundPlayerVolume(Std.int(event.value));
     menubarItemVolumeHitsoundPlayer.value = Std.int(hitsoundVolumePlayer * 100);
     previousAudioVolumes[1] = Std.int(hitsoundVolumePlayer * 100);
 
-    menubarItemVolumeHitsoundOpponent.onChange = event ->
-    {
-      var volume:Float = event.value.toFloat() / 100.0;
-      hitsoundVolumeOpponent = volume;
-      menubarLabelVolumeHitsoundOpponent.text = 'Enemy - ${Std.int(event.value)}%';
-    };
+    menubarItemVolumeHitsoundOpponent.onChange = event -> applyHitsoundOpponentVolume(Std.int(event.value));
     menubarItemVolumeHitsoundOpponent.value = Std.int(hitsoundVolumeOpponent * 100);
     previousAudioVolumes[2] = Std.int(hitsoundVolumeOpponent * 100);
 
-    menubarItemVolumeInstrumental.onChange = event ->
-    {
-      var volume:Float = event.value.toFloat() / 100.0;
-      if (audioInstTrack != null) audioInstTrack.volume = volume;
-      menubarLabelVolumeInstrumental.text = 'Instrumental - ${Std.int(event.value)}%';
-    };
+    menubarItemVolumeInstrumental.onChange = event -> applyInstrumentalVolume(Std.int(event.value));
     previousAudioVolumes[3] = menubarItemVolumeInstrumental.value;
 
-    menubarItemVolumeVocalsPlayer.onChange = event ->
-    {
-      var volume:Float = event.value.toFloat() / 100.0;
-      audioVocalTrackGroup.playerVolume = volume;
-      menubarLabelVolumeVocalsPlayer.text = 'Player - ${Std.int(event.value)}%';
-    };
+    menubarItemVolumeVocalsPlayer.onChange = event -> applyVocalsPlayerVolume(Std.int(event.value));
     previousAudioVolumes[4] = menubarItemVolumeVocalsPlayer.value;
 
-    menubarItemVolumeVocalsOpponent.onChange = event ->
-    {
-      var volume:Float = event.value.toFloat() / 100.0;
-      audioVocalTrackGroup.opponentVolume = volume;
-      menubarLabelVolumeVocalsOpponent.text = 'Enemy - ${Std.int(event.value)}%';
-    };
+    menubarItemVolumeVocalsOpponent.onChange = event -> applyVocalsOpponentVolume(Std.int(event.value));
     previousAudioVolumes[5] = menubarItemVolumeVocalsOpponent.value;
 
     menubarItemPlaybackSpeed.onChange = event ->
@@ -6345,6 +6315,42 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
     }
   }
 
+  function applyMetronomeVolume(intValue:Int):Void
+  {
+    metronomeVolume = intValue / 100.0;
+    menubarLabelVolumeMetronome.text = 'Metronome - ${intValue}%';
+  }
+
+  function applyHitsoundPlayerVolume(intValue:Int):Void
+  {
+    hitsoundVolumePlayer = intValue / 100.0;
+    menubarLabelVolumeHitsoundPlayer.text = 'Player - ${intValue}%';
+  }
+
+  function applyHitsoundOpponentVolume(intValue:Int):Void
+  {
+    hitsoundVolumeOpponent = intValue / 100.0;
+    menubarLabelVolumeHitsoundOpponent.text = 'Enemy - ${intValue}%';
+  }
+
+  function applyInstrumentalVolume(intValue:Int):Void
+  {
+    if (audioInstTrack != null) audioInstTrack.volume = intValue / 100.0;
+    menubarLabelVolumeInstrumental.text = 'Instrumental - ${intValue}%';
+  }
+
+  function applyVocalsPlayerVolume(intValue:Int):Void
+  {
+    audioVocalTrackGroup.playerVolume = intValue / 100.0;
+    menubarLabelVolumeVocalsPlayer.text = 'Player - ${intValue}%';
+  }
+
+  function applyVocalsOpponentVolume(intValue:Int):Void
+  {
+    audioVocalTrackGroup.opponentVolume = intValue / 100.0;
+    menubarLabelVolumeVocalsOpponent.text = 'Enemy - ${intValue}%';
+  }
+
   /**
    * Handle keybinds for audio playback.
    */
@@ -6353,10 +6359,10 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
     // Metronome volume toggle
     if (!isHaxeUIFocused && FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.M)
     {
-      // Changing values of the audio slider directly because it'll update the audio anyway and makes this code much cleaner, though more verbose.
       var oldValue = previousAudioVolumes[0];
       previousAudioVolumes[0] = menubarItemVolumeMetronome.value;
       menubarItemVolumeMetronome.value = (menubarItemVolumeMetronome.value == 0) ? (oldValue > menubarItemVolumeMetronome.value) ? oldValue : 100 : 0;
+      applyMetronomeVolume(Std.int(menubarItemVolumeMetronome.value));
     }
     // Hitsounds volume toggle
     if (!isHaxeUIFocused && FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.H)
@@ -6385,8 +6391,8 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
         menubarItemVolumeHitsoundPlayer.value = (oldBFValue > menubarItemVolumeHitsoundPlayer.value) ? oldBFValue : 100;
         menubarItemVolumeHitsoundOpponent.value = (oldDadValue > menubarItemVolumeHitsoundOpponent.value) ? oldDadValue : 100;
       }
-      // menubarItemVolumeHitsoundPlayer.value = (menubarItemVolumeHitsoundPlayer.value == 0) ? (oldBFValue > menubarItemVolumeHitsoundPlayer.value) ? oldBFValue : 100 : 0;
-      // menubarItemVolumeHitsoundOpponent.value = (menubarItemVolumeHitsoundOpponent.value == 0) ? (oldDadValue > menubarItemVolumeHitsoundOpponent.value) ? oldDadValue : 100 : 0;
+      applyHitsoundPlayerVolume(Std.int(menubarItemVolumeHitsoundPlayer.value));
+      applyHitsoundOpponentVolume(Std.int(menubarItemVolumeHitsoundOpponent.value));
     }
     // Instrumental volume toggle
     if (!isHaxeUIFocused && FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.I)
@@ -6394,6 +6400,7 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
       var oldValue = previousAudioVolumes[3];
       previousAudioVolumes[3] = menubarItemVolumeInstrumental.value;
       menubarItemVolumeInstrumental.value = (menubarItemVolumeInstrumental.value == 0) ? (oldValue > menubarItemVolumeInstrumental.value) ? oldValue : 100 : 0;
+      applyInstrumentalVolume(Std.int(menubarItemVolumeInstrumental.value));
     }
     // Vocals volume toggle
     if (!isHaxeUIFocused && FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.V)
@@ -6404,6 +6411,8 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
       oldValue = previousAudioVolumes[5];
       previousAudioVolumes[5] = menubarItemVolumeVocalsOpponent.value;
       menubarItemVolumeVocalsOpponent.value = (menubarItemVolumeVocalsOpponent.value == 0) ? (oldValue > menubarItemVolumeVocalsOpponent.value) ? oldValue : 100 : 0;
+      applyVocalsPlayerVolume(Std.int(menubarItemVolumeVocalsPlayer.value));
+      applyVocalsOpponentVolume(Std.int(menubarItemVolumeVocalsOpponent.value));
     }
     // Boyfriend vocals volume toggle
     if (!isHaxeUIFocused && FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.B)
@@ -6411,6 +6420,7 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
       var oldValue = previousAudioVolumes[4];
       previousAudioVolumes[4] = menubarItemVolumeVocalsPlayer.value;
       menubarItemVolumeVocalsPlayer.value = (menubarItemVolumeVocalsPlayer.value == 0) ? (oldValue > menubarItemVolumeVocalsPlayer.value) ? oldValue : 100 : 0;
+      applyVocalsPlayerVolume(Std.int(menubarItemVolumeVocalsPlayer.value));
     }
     // Dad vocals volume toggle
     if (!isHaxeUIFocused && FlxG.keys.pressed.SHIFT && FlxG.keys.justPressed.D)
@@ -6418,6 +6428,7 @@ class ChartEditorState extends UIState // UIState derives from MusicBeatState
       var oldValue = previousAudioVolumes[5];
       previousAudioVolumes[5] = menubarItemVolumeVocalsOpponent.value;
       menubarItemVolumeVocalsOpponent.value = (menubarItemVolumeVocalsOpponent.value == 0) ? (oldValue > menubarItemVolumeVocalsOpponent.value) ? oldValue : 100 : 0;
+      applyVocalsOpponentVolume(Std.int(menubarItemVolumeVocalsOpponent.value));
     }
   }
 
